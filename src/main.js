@@ -44,6 +44,67 @@ async function performSearch() {
     return;
   }
 
+  //   try {
+  //     const data = await searchImagesByQuery(
+  //       currentQuery,
+  //       currentPage,
+  //       resultsPerPage
+  //     );
+  //     if (data.total === 0) {
+  //       showError(
+  //         'Sorry, there are no images matching your search query. Please try again!'
+  //       );
+  //     } else {
+  //       // console.log(data);
+  //       if (currentPage > 1) {
+  //         const galleryHeightB = document
+  //           .querySelector('.gallery-list')
+  //           .getBoundingClientRect().height;
+  //         createGallary(data);
+  //         const galleryHeightA = document
+  //           .querySelector('.gallery-list')
+  //           .getBoundingClientRect().height;
+  //         console.log(
+  //           document.querySelector('.gallery-list').getBoundingClientRect()
+  //         );
+  //         window.scrollBy({
+  //           top: (galleryHeightA - galleryHeightB) * 0.6,
+  //           behavior: 'smooth',
+  //         });
+  //       } else {
+  //         createGallary(data);
+  //       }
+  //       if (data.hits.length < resultsPerPage) {
+  //         //const images = data.hits дожина галереї
+  //         loadMoreBtn.classList.add('hidden'); // якщо менше результатів, ховаємо кнопку
+  //         return iziToast.info({
+  //           position: 'topRight',
+  //           message: "We're sorry, but you've reached the end of search results.",
+  //         });
+  //       } else {
+  //         if (data.totalHits > currentPage * resultsPerPage) {
+  //           loadMoreBtn.classList.remove('hidden'); // показуємо кнопку "Load more"
+  //           // console.log(currentPage)
+  //         } else {
+  //           // console.log(1)
+  //           loadMoreBtn.classList.add('hidden'); // показуємо кнопку "Load more"
+  //           return iziToast.info({
+  //             position: 'topRight',
+  //             message:
+  //               "We're sorry, but you've reached the end of search results.",
+  //           });
+  //         }
+  //       }
+  //     }
+  //   } catch (error) {
+  //     showError(error.message);
+  //   } finally {
+  //     loader.classList.add('hidden'); // ховаємо індикатор завантаження
+  //     input.value = '';
+  //   }
+  // }
+
+  // ---- другий варіант ---
   try {
     const data = await searchImagesByQuery(
       currentQuery,
@@ -55,40 +116,26 @@ async function performSearch() {
         'Sorry, there are no images matching your search query. Please try again!'
       );
     } else {
-      // console.log(data);
+      console.log(data);
+      const { height: cardHeight } = document
+        .querySelector('.gallery-item')
+        .getBoundingClientRect();
+      createGallary(data);
       if (currentPage > 1) {
-        const galleryHeightB = document
-          .querySelector('.gallery-list')
-          .getBoundingClientRect().height;
-        createGallary(data);
-        const galleryHeightA = document
-          .querySelector('.gallery-list')
-          .getBoundingClientRect().height;
-        console.log(
-          document.querySelector('.gallery-list').getBoundingClientRect()
-        );
         window.scrollBy({
-          top: (galleryHeightA - galleryHeightB) * 0.6,
+          top: cardHeight * 2, // Прокручуємо на дві висоти картки
           behavior: 'smooth',
         });
-      } else {
-        createGallary(data);
       }
       if (data.hits.length < resultsPerPage) {
-        //const images = data.hits дожина галереї
-        loadMoreBtn.classList.add('hidden'); // якщо менше результатів, ховаємо кнопку
-        return iziToast.info({
-          position: 'topRight',
-          message: "We're sorry, but you've reached the end of search results.",
-        });
+        // Якщо менше результатів, ховаємо кнопку
+        loadMoreBtn.classList.add('hidden');
       } else {
         if (data.totalHits > currentPage * resultsPerPage) {
-          loadMoreBtn.classList.remove('hidden'); // показуємо кнопку "Load more"
-          // console.log(currentPage)
+          loadMoreBtn.classList.remove('hidden'); // Показуємо кнопку "Load more"
         } else {
-          // console.log(1)
-          loadMoreBtn.classList.add('hidden'); // показуємо кнопку "Load more"
-          return iziToast.info({
+          loadMoreBtn.classList.add('hidden');
+          iziToast.warning({
             position: 'topRight',
             message:
               "We're sorry, but you've reached the end of search results.",
@@ -99,84 +146,52 @@ async function performSearch() {
   } catch (error) {
     showError(error.message);
   } finally {
-    loader.classList.add('hidden'); // ховаємо індикатор завантаження
+    loader.classList.add('hidden'); // Ховаємо індикатор завантаження
+    input.value = ''; // Скидаємо значення інпуту
+  }
+
+  if (query === '') {
+    showError('Please enter a search query.');
+    loader.classList.add('hidden');
+    return;
+  }
+  try {
+    const data = await searchImagesByQuery(query);
+    if (data.total === 0) {
+      showError(
+        'Sorry, there are no images matching your search query. Please try again!'
+      );
+    } else {
+      console.log(data);
+      createGallary(data);
+    }
+  } catch (error) {
+    showError(error);
+  } finally {
+    loader.classList.add('hidden');
     input.value = '';
   }
+
+  searchImagesByQuery(query)
+    .then(data => {
+      if (data.total === 0) {
+        showError(
+          'Sorry, there are no images matching your search query. Please try again!'
+        );
+        loader.classList.add('hidden');
+        input.value = '';
+        return;
+      }
+      // else {
+      //     createGallary(data)
+      // }
+      loader.classList.add('hidden');
+      console.log(data);
+      createGallary(data);
+      input.value = '';
+    })
+    .catch(error => {
+      showError(error);
+      input.value = '';
+    });
 }
-
-// ---- другий варіант ---
-// try {
-//         const data = await searchImagesByQuery(currentQuery, currentPage, resultsPerPage);
-//         if (data.total === 0) {
-//             showError('Sorry, there are no images matching your search query. Please try again!');
-//         } else {
-//             console.log(data);
-//             const { height: cardHeight } = document.querySelector('.gallery-item').getBoundingClientRect();
-//             createGallary(data);
-//             if (currentPage > 1) {
-//                 window.scrollBy({
-//                     top: cardHeight * 2, // Прокручуємо на дві висоти картки
-//                     behavior: 'smooth'
-//                 });
-//             }
-//             if (data.hits.length < resultsPerPage) { // Якщо менше результатів, ховаємо кнопку
-//                 loadMoreBtn.classList.add('hidden');
-//             } else {
-//                 if (data.totalHits > (currentPage * resultsPerPage)) {
-//                     loadMoreBtn.classList.remove('hidden'); // Показуємо кнопку "Load more"
-//                 } else {
-//                     loadMoreBtn.classList.add('hidden');
-//                     iziToast.warning({
-//                         position: 'topRight',
-//                         message: "We're sorry, but you've reached the end of search results."
-//                     });
-//                 }
-//             }
-//         }
-//     } catch (error) {
-//         showError(error.message);
-//     } finally {
-//         loader.classList.add('hidden'); // Ховаємо індикатор завантаження
-//         input.value = ''; // Скидаємо значення інпуту
-//     }
-
-// if (query === '') {
-//     showError('Please enter a search query.');
-//     loader.classList.add("hidden")
-//     return;
-// }
-// try {
-//     const data = await searchImagesByQuery(query);
-//     if (data.total === 0) {
-//         showError('Sorry, there are no images matching your search query. Please try again!')
-//     } else {
-//         console.log(data);
-//         createGallary(data);
-//     }
-// } catch (error) {
-//     showError(error);
-// } finally {
-//     loader.classList.add("hidden")
-//     input.value = '';
-// }
-
-// searchImagesByQuery(query)
-//     .then((data) => {
-//         if (data.total === 0) {
-//             showError('Sorry, there are no images matching your search query. Please try again!')
-//             loader.classList.add("hidden")
-//             input.value = '';
-//             return;
-//         }
-//         // else {
-//         //     createGallary(data)
-//         // }
-//         loader.classList.add("hidden")
-//         console.log(data);
-//         createGallary(data);
-//         input.value = '';
-//     })
-//     .catch((error) => {
-//         showError(error);
-//         input.value = '';
-//     });
